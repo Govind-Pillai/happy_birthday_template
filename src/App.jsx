@@ -172,10 +172,14 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [birthdayReached, setBirthdayReached] = useState(false);
 
+  // Get environment variables
+  const birthdayDate = import.meta.env.VITE_TIMESTAMP;
+  const recipient = import.meta.env.VITE_RECIPIENT || 'Friend';
+  const sender = import.meta.env.VITE_SENDER || 'Your Friend';
+
   // Countdown logic
   useEffect(() => {
-    // Set birthday to today for testing - change this to actual birthday date
-    const targetDate = new Date('2026-01-20T00:00:00').getTime();
+    const targetDate = new Date(birthdayDate).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -360,9 +364,13 @@ export default function App() {
             Happy Birthday!
           </h1>
           <p className="text-xl text-white leading-relaxed">
+            Dear {recipient},<br />
             To the most amazing person I know! 🌟<br />
             May your day be filled with laughter, love, and all your favorite things.<br />
             You deserve the world and more! 💖
+            <br /><br />
+            With love,<br />
+            {sender}
           </p>
           <div className="text-4xl space-x-2">
             ✨🎈🎉🎁🎊🎈✨
