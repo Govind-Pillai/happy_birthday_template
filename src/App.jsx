@@ -1,32 +1,62 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Floating Hearts Background
-const HeartsBackground = () => {
+// Animated Background Gradient
+const AnimatedBackground = () => {
+  return (
+    <div className="fixed inset-0 -z-10">
+      <motion.div
+        animate={{
+          background: [
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+            'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+            'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+            'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          ],
+        }}
+        transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+        className="absolute inset-0"
+      />
+      <div className="absolute inset-0 bg-black/20" />
+    </div>
+  );
+};
+
+// Floating Hearts
+const FloatingHearts = () => {
   const [hearts, setHearts] = useState([]);
 
   useEffect(() => {
     const interval = setInterval(() => {
       const id = Date.now() + Math.random();
       const left = Math.random() * 100;
-      const size = Math.random() * (30 - 15) + 15;
-      const duration = Math.random() * (5 - 3) + 3;
+      const size = Math.random() * (25 - 15) + 15;
+      const duration = Math.random() * (6 - 4) + 4;
 
-      setHearts(prev => [...prev.slice(-20), { id, left, size, duration }]);
-    }, 300);
+      setHearts(prev => [...prev.slice(-12), { id, left, size, duration }]);
+    }, 600);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="fixed inset-0 pointer-events-none overflow-hidden">
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
       {hearts.map(heart => (
         <motion.div
           key={heart.id}
-          initial={{ bottom: -50, opacity: 0 }}
-          animate={{ bottom: '110%', opacity: [0, 1, 1, 0] }}
-          transition={{ duration: heart.duration, ease: 'linear' }}
-          className="absolute text-pink-400"
+          initial={{ bottom: -50, opacity: 0, rotate: 0 }}
+          animate={{
+            bottom: '110%',
+            opacity: [0, 1, 1, 0],
+            rotate: 360,
+            x: [0, Math.random() * 80 - 40]
+          }}
+          transition={{
+            duration: heart.duration,
+            ease: 'linear',
+          }}
+          className="absolute text-pink-300"
           style={{
             left: `${heart.left}%`,
             fontSize: `${heart.size}px`,
@@ -39,46 +69,48 @@ const HeartsBackground = () => {
   );
 };
 
-// Animated Confetti
+// Confetti Explosion
 const Confetti = ({ active }) => {
   const [pieces, setPieces] = useState([]);
 
   useEffect(() => {
     if (!active) return;
 
-    const colors = ['#ff6b9d', '#c44569', '#ffa502', '#ff6348', '#ff4757'];
-    const newPieces = Array.from({ length: 100 }, (_, i) => ({
+    const colors = ['#ff6b9d', '#c44569', '#ffa502', '#ff6348', '#ff4757', '#ffd93d', '#6c5ce7', '#00d2d3'];
+    const newPieces = Array.from({ length: 200 }, (_, i) => ({
       id: i,
       x: Math.random() * window.innerWidth,
+      y: -20,
       color: colors[Math.floor(Math.random() * colors.length)],
-      delay: Math.random() * 0.5,
       rotation: Math.random() * 360,
+      scale: Math.random() * 0.6 + 0.4,
     }));
     setPieces(newPieces);
 
-    const timer = setTimeout(() => setPieces([]), 5000);
+    const timer = setTimeout(() => setPieces([]), 7000);
     return () => clearTimeout(timer);
   }, [active]);
 
-  if (!active) return null;
+  if (!active || pieces.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-50">
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
       {pieces.map(piece => (
         <motion.div
           key={piece.id}
-          initial={{ y: -20, x: piece.x, rotate: 0, opacity: 1 }}
+          initial={{ x: piece.x, y: piece.y, rotate: 0, opacity: 1, scale: piece.scale }}
           animate={{
-            y: window.innerHeight + 20,
-            rotate: piece.rotation + 720,
+            y: window.innerHeight + 100,
+            x: piece.x + (Math.random() - 0.5) * 500,
+            rotate: piece.rotation + 1080,
             opacity: 0
           }}
           transition={{
-            duration: 3,
-            delay: piece.delay,
-            ease: 'easeIn'
+            duration: 4 + Math.random() * 2,
+            ease: 'easeIn',
+            delay: Math.random() * 0.5
           }}
-          className="absolute w-3 h-3 rounded"
+          className="absolute w-4 h-4 rounded"
           style={{ backgroundColor: piece.color }}
         />
       ))}
@@ -86,80 +118,177 @@ const Confetti = ({ active }) => {
   );
 };
 
-// Simple 3D Cake with Candle
+// Interactive Cake - Mobile Optimized
 const InteractiveCake = ({ onBlown }) => {
   const [blowing, setBlowing] = useState(false);
   const [candleLit, setCandleLit] = useState(true);
-  const [hasBlown, setHasBlown] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [showInstruction, setShowInstruction] = useState(true);
 
   const handleBlow = () => {
-    if (hasBlown) return; // Prevent multiple clicks
+    if (!candleLit) return;
 
-    setHasBlown(true);
     setBlowing(true);
     setCandleLit(false);
+    setShowInstruction(false);
 
     setTimeout(() => {
       onBlown();
-    }, 800);
+    }, 1200);
   };
 
+  // Mobile: Swipe up to blow
+  const handleTouchStart = (e) => {
+    setTouchStart(e.touches[0].clientY);
+    setShowInstruction(false);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!touchStart || !candleLit) return;
+
+    const currentTouch = e.touches[0].clientY;
+    const diff = touchStart - currentTouch;
+
+    if (diff > 60) {
+      handleBlow();
+      setTouchStart(null);
+    }
+  };
+
+  useEffect(() => {
+    // Hide instruction after 5 seconds
+    const timer = setTimeout(() => setShowInstruction(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
-    <div className="relative flex flex-col items-center">
+    <div className="relative flex flex-col items-center select-none px-4 w-full">
       <motion.div
-        animate={{ scale: blowing ? 1.1 : 1 }}
-        className="text-center mb-8"
+        animate={{ scale: blowing ? 1.2 : 1 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 10 }}
+        className="text-center mb-8 relative"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
       >
         {/* Candle flame */}
         {candleLit && (
           <motion.div
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 0.5 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-8 z-10"
+            animate={{
+              scale: [1, 1.4, 1],
+              y: [0, -8, 0]
+            }}
+            transition={{ repeat: Infinity, duration: 0.7 }}
+            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 z-10"
           >
-            <div className="text-4xl">🕯️</div>
+            <div className="text-6xl filter drop-shadow-2xl">🕯️</div>
           </motion.div>
         )}
 
         {/* Cake */}
-        <div className="text-9xl relative z-10">🎂</div>
+        <motion.div
+          className="text-9xl relative z-10"
+          animate={candleLit ? { rotate: [0, -3, 3, 0] } : {}}
+          transition={{ repeat: Infinity, duration: 2.5 }}
+        >
+          🎂
+        </motion.div>
 
-        {/* Glow effect */}
+        {/* Enhanced magical glow */}
         {candleLit && (
-          <motion.div
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ repeat: Infinity, duration: 1 }}
-            className="absolute inset-0 bg-yellow-400 blur-3xl rounded-full opacity-40 -z-10"
-          />
+          <>
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.3, 1] }}
+              transition={{ repeat: Infinity, duration: 1.5 }}
+              className="absolute inset-0 bg-yellow-400 blur-3xl rounded-full opacity-60 -z-10"
+            />
+            <motion.div
+              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1.3, 1.6, 1.3] }}
+              transition={{ repeat: Infinity, duration: 2.5 }}
+              className="absolute inset-0 bg-orange-400 blur-3xl rounded-full opacity-40 -z-10"
+            />
+          </>
         )}
       </motion.div>
 
-      {candleLit && !hasBlown && (
-        <motion.button
-          whileHover={{ scale: 1.1, boxShadow: "0 20px 60px rgba(236, 72, 153, 0.6)" }}
-          whileTap={{ scale: 0.95 }}
-          onClick={handleBlow}
-          style={{
-            background: 'linear-gradient(to right, #ec4899, #8b5cf6)',
-            border: '3px solid white',
-            color: 'white',
-            padding: '20px 40px',
-            borderRadius: '50px',
-            fontSize: '24px',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
-          }}
+      {candleLit && (
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-5 w-full max-w-md"
         >
-          💨 Click Here to Blow the Candle! 💨
-        </motion.button>
+          {/* Main button - HUGE for mobile */}
+          <motion.button
+            whileTap={{ scale: 0.92 }}
+            onClick={handleBlow}
+            className="w-full py-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-3xl font-bold text-2xl cursor-pointer shadow-2xl border-4 border-white/60 backdrop-blur-sm transform transition-all active:shadow-xl"
+            style={{
+              background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #6366f1 100%)',
+            }}
+          >
+            <span className="flex items-center justify-center gap-3 px-2">
+              💨 Blow the Candle! 💨
+            </span>
+          </motion.button>
+
+          {/* Swipe instruction - pulse animation */}
+          {showInstruction && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="text-center"
+            >
+              <p className="text-white/90 text-lg font-semibold bg-black/30 backdrop-blur-sm px-6 py-3 rounded-full border-2 border-white/40">
+                👆 Tap button OR swipe up on cake! ☝️
+              </p>
+            </motion.div>
+          )}
+        </motion.div>
       )}
 
       {!candleLit && (
-        <p className="text-white text-2xl font-bold mt-4">
-          🎉 Candle blown! Wait for the magic... 🎉
-        </p>
+        <motion.div
+          initial={{ scale: 0, rotate: -180 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: 'spring', stiffness: 200 }}
+          className="text-center"
+        >
+          <p className="text-white text-3xl font-bold mt-6 px-4">
+            🎉 Making your wishes come true! 🎉
+          </p>
+        </motion.div>
       )}
+    </div>
+  );
+};
+
+// Countdown Timer - Mobile Optimized
+const CountdownTimer = ({ timeLeft }) => {
+  return (
+    <div className="w-full max-w-xl mx-auto px-4">
+      <div className="grid grid-cols-2 gap-4">
+        {Object.entries(timeLeft).map(([unit, value], idx) => (
+          <motion.div
+            key={unit}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.15, type: 'spring' }}
+            className="bg-white/15 backdrop-blur-2xl rounded-3xl p-6 border-2 border-white/40 shadow-2xl"
+          >
+            <motion.div
+              key={value}
+              initial={{ scale: 1.3, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="text-5xl font-bold text-white mb-2"
+            >
+              {String(value).padStart(2, '0')}
+            </motion.div>
+            <div className="text-base text-purple-200 capitalize font-semibold tracking-wide">
+              {unit}
+            </div>
+          </motion.div>
+        ))}
+      </div>
     </div>
   );
 };
@@ -172,14 +301,9 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [birthdayReached, setBirthdayReached] = useState(false);
 
-  // Get environment variables
-  const birthdayDate = import.meta.env.VITE_TIMESTAMP;
-  const recipient = import.meta.env.VITE_RECIPIENT || 'Friend';
-  const sender = import.meta.env.VITE_SENDER || 'Your Friend';
-
-  // Countdown logic
   useEffect(() => {
-    const targetDate = new Date(birthdayDate).getTime();
+    // Set to IST timezone
+    const targetDate = new Date('2026-01-26T00:00:00+05:30').getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -188,6 +312,7 @@ export default function App() {
       if (distance < 0) {
         setBirthdayReached(true);
         clearInterval(interval);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
       } else {
         setTimeLeft({
           days: Math.floor(distance / (1000 * 60 * 60 * 24)),
@@ -201,45 +326,53 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const containerVariants = {
+    hidden: { opacity: 0, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.4, ease: 'easeOut' }
+    },
+    exit: {
+      opacity: 0,
+      scale: 1.05,
+      transition: { duration: 0.3 }
+    }
+  };
+
   const screens = {
     countdown: (
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        className="text-center space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 px-4 py-8"
       >
         <motion.h1
-          className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-clip-text text-transparent"
-          animate={{ scale: [1, 1.02, 1] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          className="text-4xl font-bold leading-tight px-2"
+          style={{
+            background: 'linear-gradient(135deg, #ffd93d 0%, #ff6b9d 50%, #c44569 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
         >
-          Counting Down to Your Special Day 🎂
+          ✨ Counting Down to Your Special Day! 🎂
         </motion.h1>
 
-        <div className="grid grid-cols-4 gap-4 max-w-2xl mx-auto">
-          {Object.entries(timeLeft).map(([unit, value]) => (
-            <motion.div
-              key={unit}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 shadow-xl"
-            >
-              <div className="text-4xl md:text-5xl font-bold text-white">{value}</div>
-              <div className="text-sm md:text-base text-purple-200 capitalize mt-2">{unit}</div>
-            </motion.div>
-          ))}
-        </div>
+        <CountdownTimer timeLeft={timeLeft} />
 
         {birthdayReached && (
           <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.1 }}
+            initial={{ scale: 0, rotate: -90 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => setScreen('intro')}
-            className="mt-8 px-12 py-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-full font-bold text-2xl shadow-2xl hover:shadow-pink-500/50 transition-all"
+            className="w-full max-w-md mx-auto mt-8 py-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-3xl font-bold text-2xl shadow-2xl border-4 border-white/60"
           >
-            🎉 IT'S TIME! Click Here!
+            🎉 IT'S YOUR DAY! 🎉
           </motion.button>
         )}
       </motion.div>
@@ -247,43 +380,39 @@ export default function App() {
 
     intro: (
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.2, opacity: 0 }}
-        className="text-center space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 px-4 py-8"
       >
         <motion.div
-          animate={{ rotate: [0, 10, -10, 0] }}
-          transition={{ repeat: Infinity, duration: 2 }}
+          animate={{
+            rotate: [0, 15, -15, 15, 0],
+            scale: [1, 1.15, 1, 1.15, 1]
+          }}
+          transition={{ repeat: Infinity, duration: 2.5 }}
           className="text-9xl"
         >
-          <motion.div
-            animate={{ x: [-10, 10, -10] }}
-            transition={{ repeat: Infinity, duration: 12 }}
-            className="w-64 h-64 mx-auto mb-8 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30"
-          >
-            <img src="/kitten-ask.gif" alt="Ask Kitten" className="w-full h-full object-cover" />
-          </motion.div>
+          🎁
         </motion.div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-white">
-          Will you accept my birthday surprise? 💝
+        <h1 className="text-4xl font-bold text-white leading-tight px-2">
+          Will you accept my<br />birthday surprise? 💝
         </h1>
 
-        <div className="flex gap-4 justify-center flex-wrap">
+        <div className="flex flex-col gap-4 px-4 max-w-md mx-auto pt-4">
           <motion.button
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setScreen('cake')}
-            className="px-12 py-6 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-full font-bold text-2xl shadow-xl"
+            className="w-full py-6 bg-gradient-to-r from-green-400 to-emerald-500 text-white rounded-3xl font-bold text-2xl shadow-2xl border-4 border-white/50"
           >
             YES! 🎊
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.1, rotate: -5 }}
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => setScreen('no')}
-            className="px-12 py-6 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-full font-bold text-2xl shadow-xl"
+            className="w-full py-6 bg-gradient-to-r from-red-400 to-pink-500 text-white rounded-3xl font-bold text-2xl shadow-2xl border-4 border-white/50"
           >
             No...
           </motion.button>
@@ -293,32 +422,35 @@ export default function App() {
 
     no: (
       <motion.div
-        initial={{ rotate: -10, scale: 0.8, opacity: 0 }}
-        animate={{ rotate: 0, scale: 1, opacity: 1 }}
-        exit={{ rotate: 10, scale: 0.8, opacity: 0 }}
-        className="text-center space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 px-4 py-8"
       >
         <motion.div
-          animate={{ x: [-10, 10, -10] }}
-          transition={{ repeat: Infinity, duration: 0.2 }}
-          className="w-64 h-64 mx-auto mb-8 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30"
+          animate={{
+            rotate: [0, -15, 15, -15, 0],
+            scale: [1, 1.25, 1]
+          }}
+          transition={{ repeat: Infinity, duration: 0.7 }}
+          className="text-9xl"
         >
-          <img src="/kitten-angry.gif" alt="Angry Kitten" className="w-full h-full object-cover" />
+          😤
         </motion.div>
 
-        <h1 className="text-4xl md:text-6xl font-bold text-white">
+        <h1 className="text-5xl font-bold text-white px-2 leading-tight">
           HOW DARE YOU! 💢
         </h1>
 
-        <p className="text-2xl text-purple-200">
+        <p className="text-2xl text-purple-200 px-4">
           That's not very cash money of you...
         </p>
 
         <motion.button
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileTap={{ scale: 0.95 }}
           onClick={() => setScreen('intro')}
-          className="px-10 py-5 bg-gradient-to-r from-purple-400 to-pink-400 text-white rounded-full font-bold text-xl shadow-xl"
+          className="w-full max-w-md mx-auto py-6 bg-gradient-to-r from-purple-400 to-pink-400 text-white rounded-3xl font-bold text-xl shadow-2xl border-4 border-white/50"
         >
           I'm sorry! Take me back 🥺
         </motion.button>
@@ -327,16 +459,17 @@ export default function App() {
 
     cake: (
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="text-center space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 px-4 py-8"
       >
         <motion.h1
-          className="text-4xl md:text-5xl font-bold text-white"
-          animate={{ scale: showConfetti ? [1, 1.1, 1] : 1 }}
+          className="text-3xl font-bold text-white px-2 leading-tight"
+          animate={{ scale: showConfetti ? [1, 1.08, 1] : 1 }}
         >
-          {showConfetti ? "🎊 HAPPY BIRTHDAY! 🎊" : "Make a wish and blow the candle! 🕯️"}
+          {showConfetti ? "🎊 HAPPY BIRTHDAY! 🎊" : "Make a wish & blow the candle! 🕯️"}
         </motion.h1>
 
         <InteractiveCake
@@ -345,7 +478,7 @@ export default function App() {
             setTimeout(() => {
               setScreen('card');
               setShowConfetti(false);
-            }, 4000);
+            }, 6000);
           }}
         />
       </motion.div>
@@ -353,65 +486,78 @@ export default function App() {
 
     card: (
       <motion.div
-        initial={{ rotateY: 90, opacity: 0 }}
-        animate={{ rotateY: 0, opacity: 1 }}
-        exit={{ rotateY: -90, opacity: 0 }}
-        className="max-w-2xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="w-full max-w-lg mx-auto px-4 py-8"
       >
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-12 border border-white/20 shadow-2xl text-center space-y-6">
-          <div className="text-6xl">🎂</div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+        <motion.div
+          className="bg-white/15 backdrop-blur-2xl rounded-3xl p-8 border-2 border-white/40 shadow-2xl text-center space-y-6"
+        >
+          <motion.div
+            className="text-7xl"
+            animate={{ rotate: [0, 12, -12, 0] }}
+            transition={{ repeat: Infinity, duration: 2.5 }}
+          >
+            🎂
+          </motion.div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
             Happy Birthday!
           </h1>
-          <p className="text-xl text-white leading-relaxed">
-            Dear {recipient},<br />
+          <p className="text-xl text-white leading-relaxed px-2">
             To the most amazing person I know! 🌟<br />
             May your day be filled with laughter, love, and all your favorite things.<br />
             You deserve the world and more! 💖
-            <br /><br />
-            With love,<br />
-            {sender}
           </p>
-          <div className="text-4xl space-x-2">
+          <div className="text-4xl space-x-2 py-2">
             ✨🎈🎉🎁🎊🎈✨
           </div>
           <motion.button
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setScreen('gifts')}
-            className="mt-6 px-10 py-5 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold text-xl shadow-xl"
+            className="w-full mt-6 py-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-3xl font-bold text-xl shadow-2xl border-4 border-white/50"
           >
             Open Your Gifts! 🎁
           </motion.button>
-        </div>
+        </motion.div>
       </motion.div>
     ),
 
     gifts: (
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.2, opacity: 0 }}
-        className="text-center space-y-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 px-4 py-8"
       >
-        <h1 className="text-4xl md:text-5xl font-bold text-white">
+        <h1 className="text-4xl font-bold text-white px-2">
           Choose Your Gift! 🎁✨
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 gap-5 max-w-md mx-auto">
           {[1, 2, 3].map((id) => (
             <motion.div
               key={id}
-              whileHover={{ scale: 1.1, rotate: 10 }}
-              whileTap={{ scale: 0.9 }}
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: id * 0.15, type: 'spring' }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => {
                 setSelectedGift(id);
                 setScreen('reward');
               }}
-              className="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 shadow-xl cursor-pointer hover:bg-white/20 transition-all"
+              className="bg-white/15 backdrop-blur-2xl rounded-3xl p-10 border-2 border-white/40 shadow-2xl cursor-pointer active:bg-white/25 transition-all"
             >
-              <div className="text-8xl">🎁</div>
-              <p className="text-white text-xl mt-4 font-semibold">Gift #{id}</p>
+              <motion.div
+                className="text-8xl mb-3"
+                animate={{ rotate: [0, -12, 12, 0] }}
+                transition={{ repeat: Infinity, duration: 2.5, delay: id * 0.3 }}
+              >
+                🎁
+              </motion.div>
+              <p className="text-white text-2xl font-bold">Gift #{id}</p>
             </motion.div>
           ))}
         </div>
@@ -420,48 +566,50 @@ export default function App() {
 
     reward: (
       <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: -50, opacity: 0 }}
-        className="text-center space-y-8 max-w-2xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="text-center space-y-8 max-w-lg mx-auto px-4 py-8"
       >
         {(() => {
           const rewards = {
-            1: { gif: '/kitten-hug.gif', text: 'Unlimited Hugs Coupon!', desc: 'Redeemable anytime, anywhere, forever!' },
-            2: { gif: '/kitten-love.gif', text: "You're Royalty!", desc: 'The best friend in the entire universe!' },
-            3: { gif: '/kitten-coffee.gif', text: 'Coffee on Me!', desc: 'Unlimited coffee dates whenever you want!' }
+            1: { emoji: '🤗', text: 'Unlimited Hugs!', desc: 'Redeemable anytime, anywhere, forever!' },
+            2: { emoji: '👑', text: "You're Royalty!", desc: 'The best friend in the entire universe!' },
+            3: { emoji: '☕', text: 'Coffee on Me!', desc: 'Unlimited coffee dates whenever you want!' }
           };
           const reward = rewards[selectedGift] || rewards[1];
 
           return (
             <>
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-64 h-64 mx-auto mb-8 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30"
+                animate={{
+                  rotate: [0, 20, -20, 0],
+                  scale: [1, 1.25, 1]
+                }}
+                transition={{ repeat: Infinity, duration: 2.5 }}
+                className="text-9xl"
               >
-                <img src={reward.gif} alt={reward.text} className="w-full h-full object-cover" />
+                {reward.emoji}
               </motion.div>
-              <h2 className="text-4xl md:text-5xl font-bold text-white">{reward.text}</h2>
-              <p className="text-2xl text-purple-200">{reward.desc}</p>
+              <h2 className="text-4xl font-bold text-white px-2">{reward.text}</h2>
+              <p className="text-2xl text-purple-200 px-4">{reward.desc}</p>
             </>
           );
         })()}
 
-        <div className="flex gap-4 justify-center flex-wrap">
+        <div className="flex flex-col gap-4 px-4 pt-4">
           <motion.button
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setScreen('gifts')}
-            className="px-8 py-4 bg-white/20 backdrop-blur-lg text-white rounded-full font-bold text-lg border border-white/30"
+            className="w-full py-6 bg-white/20 backdrop-blur-lg text-white rounded-3xl font-bold text-lg border-2 border-white/40"
           >
             Try Another Gift
           </motion.button>
           <motion.button
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setScreen('letter')}
-            className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold text-lg shadow-xl"
+            className="w-full py-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-3xl font-bold text-lg shadow-2xl border-4 border-white/50"
           >
             Send Me a Message ✉️
           </motion.button>
@@ -471,34 +619,34 @@ export default function App() {
 
     letter: (
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 1.1, opacity: 0 }}
-        className="max-w-2xl mx-auto"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="w-full max-w-lg mx-auto px-4 py-8"
       >
-        <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl space-y-6">
+        <div className="bg-white/15 backdrop-blur-2xl rounded-3xl p-6 border-2 border-white/40 shadow-2xl space-y-6">
           <h1 className="text-4xl font-bold text-white text-center">Write Me a Note 📝</h1>
           <textarea
-            className="w-full h-64 bg-white/20 backdrop-blur-lg text-white placeholder-purple-200 rounded-2xl p-6 border border-white/30 focus:outline-none focus:ring-2 focus:ring-pink-500 resize-none text-lg"
+            id="birthday-message"
+            className="w-full h-64 bg-white/25 backdrop-blur-lg text-white placeholder-purple-200 rounded-2xl p-5 border-2 border-white/40 focus:outline-none focus:ring-4 focus:ring-pink-500/60 resize-none text-lg"
             placeholder="Share your thoughts, wishes, or anything on your mind..."
           />
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col gap-4">
             <motion.button
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setScreen('reward')}
-              className="px-8 py-4 bg-white/20 backdrop-blur-lg text-white rounded-full font-bold border border-white/30"
+              className="w-full py-5 bg-white/20 backdrop-blur-lg text-white rounded-3xl font-bold border-2 border-white/40 text-lg"
             >
               Back
             </motion.button>
             <motion.button
-              whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => {
-                const message = document.querySelector('textarea').value;
+                const message = document.getElementById('birthday-message').value;
                 window.location.href = `mailto:govitheflash@gmail.com?subject=Birthday Message&body=${encodeURIComponent(message)}`;
               }}
-              className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full font-bold shadow-xl"
+              className="w-full py-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-3xl font-bold shadow-2xl text-lg border-4 border-white/50"
             >
               Send Email ✉️
             </motion.button>
@@ -509,13 +657,14 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-800 to-indigo-900 overflow-hidden">
-      <HeartsBackground />
+    <div className="min-h-screen overflow-hidden relative">
+      <AnimatedBackground />
+      <FloatingHearts />
       <Confetti active={showConfetti} />
 
-      <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
+      <div className="relative z-10 min-h-screen flex items-center justify-center">
         <AnimatePresence mode="wait">
-          <motion.div key={screen} className="w-full max-w-6xl">
+          <motion.div key={screen} className="w-full">
             {screens[screen]}
           </motion.div>
         </AnimatePresence>
