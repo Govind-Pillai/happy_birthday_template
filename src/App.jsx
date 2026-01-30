@@ -162,52 +162,42 @@ const InteractiveCake = ({ onBlown }) => {
   }, []);
 
   return (
-    <div className="relative flex flex-col items-center select-none px-4 w-full">
+    <div className="relative flex flex-col items-center select-none px-4 w-full max-w-2xl mx-auto">
+      {/* Premium Cake Card Container */}
       <motion.div
-        animate={{ scale: blowing ? 1.2 : 1 }}
+        animate={{ scale: blowing ? 1.05 : 1 }}
         transition={{ type: 'spring', stiffness: 200, damping: 10 }}
-        className="text-center mb-8 relative"
+        className="w-full bg-white/10 backdrop-blur-3xl rounded-3xl p-8 border-2 border-white/30 shadow-2xl mb-8 relative overflow-hidden"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
       >
-        {/* Candle flame */}
-        {candleLit && (
-          <motion.div
-            animate={{
-              scale: [1, 1.4, 1],
-              y: [0, -8, 0]
-            }}
-            transition={{ repeat: Infinity, duration: 0.7 }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-12 z-10"
-          >
-            <div className="text-6xl filter drop-shadow-2xl">🕯️</div>
-          </motion.div>
-        )}
-
-        {/* Cake */}
-        <motion.div
-          className="text-9xl relative z-10"
-          animate={candleLit ? { rotate: [0, -3, 3, 0] } : {}}
-          transition={{ repeat: Infinity, duration: 2.5 }}
-        >
-          🎂
-        </motion.div>
-
-        {/* Enhanced magical glow */}
+        {/* Background glow effects */}
         {candleLit && (
           <>
             <motion.div
-              animate={{ opacity: [0.5, 1, 0.5], scale: [1, 1.3, 1] }}
-              transition={{ repeat: Infinity, duration: 1.5 }}
-              className="absolute inset-0 bg-yellow-400 blur-3xl rounded-full opacity-60 -z-10"
+              animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.2, 1] }}
+              transition={{ repeat: Infinity, duration: 2 }}
+              className="absolute inset-0 bg-gradient-to-br from-yellow-400/40 via-orange-400/40 to-pink-400/40 blur-3xl"
             />
             <motion.div
-              animate={{ opacity: [0.3, 0.7, 0.3], scale: [1.3, 1.6, 1.3] }}
-              transition={{ repeat: Infinity, duration: 2.5 }}
-              className="absolute inset-0 bg-orange-400 blur-3xl rounded-full opacity-40 -z-10"
+              animate={{ opacity: [0.2, 0.5, 0.2], scale: [1.2, 1.4, 1.2] }}
+              transition={{ repeat: Infinity, duration: 3 }}
+              className="absolute inset-0 bg-gradient-to-tl from-purple-400/30 via-pink-400/30 to-yellow-400/30 blur-3xl"
             />
           </>
         )}
+
+        {/* Cake Container */}
+        <div className="relative z-10 flex flex-col items-center">
+          {/* Cake */}
+          <motion.div
+            className="text-9xl relative"
+            animate={candleLit ? { rotate: [0, -3, 3, 0] } : { rotate: 360 }}
+            transition={candleLit ? { repeat: Infinity, duration: 2.5 } : { duration: 0.6 }}
+          >
+            🎂
+          </motion.div>
+        </div>
       </motion.div>
 
       {candleLit && (
@@ -300,10 +290,32 @@ export default function App() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   const [birthdayReached, setBirthdayReached] = useState(false);
+  const [config, setConfig] = useState(null);
+  const [audio] = useState(new Audio('/music.mp3'));
+
+  // Load config from JSON
+  useEffect(() => {
+    fetch('/config.json')
+      .then(res => res.json())
+      .then(data => setConfig(data))
+      .catch(err => console.error('Error loading config:', err));
+  }, []);
+
+  // Setup audio
+  useEffect(() => {
+    audio.loop = true;
+    audio.volume = 0.5;
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, [audio]);
 
   useEffect(() => {
-    // Set to IST timezone
-    const targetDate = new Date('2026-01-26T00:00:00+05:30').getTime();
+    if (!config) return;
+
+    // Set to IST timezone from config
+    const targetDate = new Date(config.targetDate).getTime();
 
     const interval = setInterval(() => {
       const now = new Date().getTime();
@@ -324,7 +336,7 @@ export default function App() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [config]);
 
   const containerVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -369,7 +381,13 @@ export default function App() {
             animate={{ scale: 1, rotate: 0 }}
             transition={{ type: 'spring', stiffness: 200, delay: 0.2 }}
             whileTap={{ scale: 0.9 }}
-            onClick={() => setScreen('intro')}
+            onClick={() => {
+              setScreen('intro');
+              // Play music when clicking IT'S YOUR DAY
+              if (config?.enableMusic) {
+                audio.play().catch(err => console.log('Audio play failed:', err));
+              }
+            }}
             className="w-full max-w-md mx-auto mt-8 py-6 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white rounded-3xl font-bold text-2xl shadow-2xl border-4 border-white/60"
           >
             🎉 IT'S YOUR DAY! 🎉
@@ -394,7 +412,13 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 2.5 }}
           className="text-9xl"
         >
-          🎁
+          <motion.div
+            animate={{ x: [-10, 10, -10] }}
+            transition={{ repeat: Infinity, duration: 12 }}
+            className="w-64 h-64 mx-auto mb-8 rounded-3xl overflow-hidden shadow-2xl border-4 border-white/30"
+          >
+            <img src="/kitten-ask.gif" alt="Ask Kitten" className="w-full h-full object-cover" />
+          </motion.div>
         </motion.div>
 
         <h1 className="text-4xl font-bold text-white leading-tight px-2">
@@ -436,7 +460,7 @@ export default function App() {
           transition={{ repeat: Infinity, duration: 0.7 }}
           className="text-9xl"
         >
-          😤
+          <img src="/kitten-angry.gif" alt="Angry Kitten" className="w-full h-full object-cover" />
         </motion.div>
 
         <h1 className="text-5xl font-bold text-white px-2 leading-tight">
@@ -465,12 +489,32 @@ export default function App() {
         exit="exit"
         className="text-center space-y-8 px-4 py-8"
       >
-        <motion.h1
-          className="text-3xl font-bold text-white px-2 leading-tight"
-          animate={{ scale: showConfetti ? [1, 1.08, 1] : 1 }}
-        >
-          {showConfetti ? "🎊 HAPPY BIRTHDAY! 🎊" : "Make a wish & blow the candle! 🕯️"}
-        </motion.h1>
+        {showConfetti ? (
+          <motion.div
+            className="text-center space-y-2"
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+          >
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-4xl">🎉</span>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Happy
+              </h1>
+              <span className="text-4xl">🎉</span>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <span className="text-4xl">🎊</span>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Birthday!
+              </h1>
+              <span className="text-4xl">🎊</span>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.h1 className="text-3xl font-bold text-white px-2 leading-tight">
+            Make a wish & blow the candle!
+          </motion.h1>
+        )}
 
         <InteractiveCake
           onBlown={() => {
@@ -495,20 +539,41 @@ export default function App() {
         <motion.div
           className="bg-white/15 backdrop-blur-2xl rounded-3xl p-8 border-2 border-white/40 shadow-2xl text-center space-y-6"
         >
-          <motion.div
-            className="text-7xl"
-            animate={{ rotate: [0, 12, -12, 0] }}
-            transition={{ repeat: Infinity, duration: 2.5 }}
-          >
-            🎂
-          </motion.div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-            Happy Birthday!
-          </h1>
-          <p className="text-xl text-white leading-relaxed px-2">
-            To the most amazing person I know! 🌟<br />
-            May your day be filled with laughter, love, and all your favorite things.<br />
-            You deserve the world and more! 💖
+          {/* Happy Birthday with emojis */}
+          <div className="space-y-3 mb-4">
+            <div className="flex items-center justify-center gap-4">
+              <motion.span
+                className="text-5xl"
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >🎉</motion.span>
+              <h1 className="text-6xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Happy
+              </h1>
+              <motion.span
+                className="text-5xl"
+                animate={{ rotate: [0, -15, 15, 0] }}
+                transition={{ repeat: Infinity, duration: 2 }}
+              >🎉</motion.span>
+            </div>
+            <div className="flex items-center justify-center gap-4">
+              <motion.span
+                className="text-5xl"
+                animate={{ rotate: [0, -15, 15, 0] }}
+                transition={{ repeat: Infinity, duration: 2.2 }}
+              >🎊</motion.span>
+              <h1 className="text-6xl font-bold bg-gradient-to-r from-yellow-300 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+                Birthday!
+              </h1>
+              <motion.span
+                className="text-5xl"
+                animate={{ rotate: [0, 15, -15, 0] }}
+                transition={{ repeat: Infinity, duration: 2.2 }}
+              >🎊</motion.span>
+            </div>
+          </div>
+          <p className="text-xl text-white leading-relaxed px-2 whitespace-pre-line">
+            {config?.personalMessage || "To the most amazing person I know! 🌟\nMay your day be filled with laughter, love, and all your favorite things.\nYou deserve the world and more! 💖"}
           </p>
           <div className="text-4xl space-x-2 py-2">
             ✨🎈🎉🎁🎊🎈✨
@@ -574,9 +639,9 @@ export default function App() {
       >
         {(() => {
           const rewards = {
-            1: { emoji: '🤗', text: 'Unlimited Hugs!', desc: 'Redeemable anytime, anywhere, forever!' },
-            2: { emoji: '👑', text: "You're Royalty!", desc: 'The best friend in the entire universe!' },
-            3: { emoji: '☕', text: 'Coffee on Me!', desc: 'Unlimited coffee dates whenever you want!' }
+            1: { gif: '/kitten-hug.gif', text: 'Unlimited Hugs Coupon!', desc: 'Redeemable anytime, anywhere, forever!' },
+            2: { gif: '/kitten-love.gif', text: "You're Royalty!", desc: 'The best friend in the entire universe!' },
+            3: { gif: '/kitten-coffee.gif', text: 'Coffee on Me!', desc: 'Unlimited coffee dates whenever you want!' }
           };
           const reward = rewards[selectedGift] || rewards[1];
 
@@ -588,9 +653,9 @@ export default function App() {
                   scale: [1, 1.25, 1]
                 }}
                 transition={{ repeat: Infinity, duration: 2.5 }}
-                className="text-9xl"
+                className="w-64 h-64 mx-auto"
               >
-                {reward.emoji}
+                <img src={reward.gif} alt={reward.text} className="w-full h-full object-cover rounded-3xl shadow-2xl border-4 border-white/30" />
               </motion.div>
               <h2 className="text-4xl font-bold text-white px-2">{reward.text}</h2>
               <p className="text-2xl text-purple-200 px-4">{reward.desc}</p>
@@ -644,11 +709,19 @@ export default function App() {
               whileTap={{ scale: 0.95 }}
               onClick={() => {
                 const message = document.getElementById('birthday-message').value;
-                window.location.href = `mailto:govitheflash@gmail.com?subject=Birthday Message&body=${encodeURIComponent(message)}`;
+                const email = config?.email || 'govitheflash@gmail.com';
+                window.location.href = `mailto:${email}?subject=Birthday Message&body=${encodeURIComponent(message)}`;
               }}
               className="w-full py-6 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-3xl font-bold shadow-2xl text-lg border-4 border-white/50"
             >
               Send Email ✉️
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.reload()}
+              className="w-full py-5 bg-red-500/80 backdrop-blur-lg text-white rounded-3xl font-bold border-2 border-white/40 text-lg hover:bg-red-600/80 transition-colors"
+            >
+              Exit
             </motion.button>
           </div>
         </div>
