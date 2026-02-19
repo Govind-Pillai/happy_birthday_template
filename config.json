@@ -1,0 +1,12 @@
+{
+  "recipientName": "Bestie",
+  "targetDate": "2026-02-20T12:33:06Z",
+  "birthdayMessage": "Happy Birthday! You are the best friend anyone could ask for. Here's to another year of adventures!",
+  "senderEmail": "sender@example.com",
+  "sender": "Your Best Friend",
+  "gifts": [
+    { "id": "1", "label": "Mystery Box 1", "content": "Unlimited Hugs Coupon! 🤗", "image": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODg3YmRhZGUxMmU0ZWRlMjE5OWUzYjQ5Y2E4OTQ2ZDAwZDAwZDAwZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oEdv4hwTZKSsUH8t6/giphy.gif" },
+    { "id": "2", "label": "Mystery Box 2", "content": "Coffee Date on Me! ☕", "image": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODg3YmRhZGUxMmU0ZWRlMjE5OWUzYjQ5Y2E4OTQ2ZDAwZDAwZDAwZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3oKIP8kNuTJJL3zK00/giphy.gif" },
+    { "id": "3", "label": "Mystery Box 3", "content": "Movie Night Choice! 🎬", "image": "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExODg3YmRhZGUxMmU0ZWRlMjE5OWUzYjQ5Y2E4OTQ2ZDAwZDAwZDAwZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/26BRzozg4TCJkTgqa/giphy.gif" }
+  ]
+}

@@ -2,11 +2,7 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// We'll store the "config" in the database so it can be edited if needed, 
-// or just serve a default one. For now, let's just have a simple structure.
-// Since this is a single-instance gift, we might not strictly need a DB for the core flow,
-// but it's good practice to have one for "Letter" backup or "Config".
-
+// We'll store the "messages" in the database as a backup for the letter feature.
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   content: text("content").notNull(),
@@ -28,6 +24,7 @@ export const appConfigSchema = z.object({
   targetDate: z.string(), // ISO string
   birthdayMessage: z.string(),
   senderEmail: z.string().email(),
+  sender: z.string().optional(),
   gifts: z.array(z.object({
     id: z.string(),
     label: z.string(), // "Gift 1"
