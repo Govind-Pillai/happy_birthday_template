@@ -1,0 +1,56 @@
+Prompt for "Bestie Birthday Surprise" Website
+Role: Expert Frontend Developer (React, Tailwind CSS, Framer Motion)
+
+Objective: Build a premium, mobile-optimized "Birthday Surprise" web application designed to be gifted to a best friend. The app should be visually stunning, highly interactive, and personalized via a configuration file.
+
+Tech Stack
+Framework: React 19 (via Vite)
+Styling: Tailwind CSS 4 (Glassmorphism, Gradients)
+Animation: Framer Motion (Complex sequences, AnimatePresence)
+State Management: React Hooks (useState, useEffect)
+Assets: Gifs for interactions (kittens), MP3 for background music.
+Core Features & Flow
+The application should manage a multi-stage "Story" flow:
+
+Countdown Screen ⏳
+
+Display a real-time countdown (Days, Hours, Minutes, Seconds) to a targetDate loaded from 
+config.json
+.
+Design: Glassmorphism cards for numbers, floating hearts background.
+Logic: When time is reached, show a "IT'S YOUR DAY!" button to entering the main experience.
+Intro Screen 😻
+
+Cute "Ask" gif (e.g., waiting kitten).
+Question: "Will you accept my birthday surprise?"
+Yes Button: Proceed to Cake.
+No Button: Proceed to "No" screen (Angry/Sad reaction, "How dare you!", asking to go back).
+Cake Celebration Screen 🎂
+
+Interactive Cake: A central cake element.
+Action: User must "blow" the candle. Support both a "Blow" button and a "Swipe Up" gesture (for mobile).
+Feedback: On blow, the candle extinguishes, confetti explodes (canvas/DOM confetti), and "Happy Birthday" text animates in.
+Automatically transition to the Card screen after a few seconds.
+Birthday Card Screen 💌
+
+Display a personalized heartfelt message (from 
+config.json
+).
+Decorations: Animated text, emojis, vibrant gradients.
+CTA: "Open Your Gifts!"
+Gift Selection Screen 🎁
+
+Display 3 mystery gift boxes (effectively cards/buttons).
+Animation: Floating/shaking animations to invite clicking.
+User selects one to reveal their "Reward".
+Reward & Interaction Screen 🏆
+
+Reveal the chosen gift (e.g., "Unlimited Hugs", "Coffee Date", "Royal Treatment").
+Show a matching cute gif.
+Options:
+"Try Another Gift" (Go back).
+"Send Me a Message" (Go to Letter screen).
+Letter Screen 📝
+
+A notepad-style text area for the recipient to write a reply.
+Send Emails: A button to trigger a mailto: link pre-filled with the message to the sender's email (from config).
